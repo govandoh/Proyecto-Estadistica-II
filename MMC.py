@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import statsmodels.api as sm
 
+
 #Algoritmo que calcula la b, a, r y forma la ecuacion de la recta. Retorna el valor de la estimacion
 def algoritmo_minimos_cuadrados(n, x, y, z):
     sumaX = 0
@@ -25,7 +26,7 @@ def algoritmo_minimos_cuadrados(n, x, y, z):
     print(str(sumaX) + "\t" + str(sumaY) + "\t" + str(sumaXY) + "\t" + str(sumaX2) + "\t" + str(sumaY2)) # Muestra la sumatoria de x, y, x*y, x^2 en pantalla
     b = ((n * sumaXY) - (sumaX * sumaY)) / ((n * sumaX2) - (sumaX**2))  # Calcula b usando las variables en donde se guardaron las sumatorias
     a = (sumaY / n) - b * (sumaX / n)  # Calcula a
-    r = ((n * sumaXY) - (sumaX * sumaY)) / sqrt((n * sumaXY - (sumaX**2)) * ((n * sumaY2) - (sumaY**2))) # Calcula r
+    r = ((n * sumaXY) - (sumaX * sumaY)) / sqrt((n * sumaX2 - (sumaX**2)) * ((n * sumaY2) - (sumaY**2))) # Calcula r
     print("\nLa ecuación de la recta es Y = {}(x) + {} \nCoeficiente de correlacion r = {}".format(b, a, r)) # Muestra la ecuacion
     valor_deflexion = b * z + a #Evalua x
     
@@ -41,14 +42,14 @@ def algoritmo_minimos_cuadrados(n, x, y, z):
     return valor_deflexion
 
 # Funcion que permite cargar un archivo CSV para una regresion lineal simple
-def insertar_csv_lineal():
+def insertar_csv_lineal(ruta,z):
     # Mientras este en el ciclo While, el programa le pedira al usuario que cargue un archivo CSV.
     # Al final le preguntara si quiere cargar otro archivo CSV. Si en un caso el usuario responde diferente a 's' entonces se saldra del ciclo While
     while True:
         n = 0
         x = []
         y = []
-        ruta = input("Copie y pegue la ruta de su archivo: ") # Guardamos la ruta del archivo en la variable 'ruta'
+        #ruta = input("Copie y pegue la ruta de su archivo: ") # Guardamos la ruta del archivo en la variable 'ruta'
         
         with open(ruta,"r") as archivo: # Abre el archivo CSV que se guardo en la ruta
             lector = csv.reader(archivo) #Obtiene todas las filas del archivo
@@ -62,7 +63,7 @@ def insertar_csv_lineal():
         # Al final le preguntara si quiere estimar otro valor usando los mismos datos del archivo CSV. 
         #Si en un caso el usuario responde diferente a 's' entonces se saldra del ciclo While
         while True:
-            z = float(input("Ingrese el valor de x a estimar: "))
+            #z = float(input("Ingrese el valor de x a estimar: "))
             resultado = algoritmo_minimos_cuadrados(n, x, y, z) #Almacena el valor estimado en la variable resultado
             print("El valor de deflexión aproximado es: ", resultado)
 
