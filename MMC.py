@@ -7,6 +7,8 @@ import numpy as np
 import pandas as pd
 import statsmodels.api as sm
 
+import vista
+
 #Algoritmo que calcula la b, a, r y forma la ecuacion de la recta. Retorna el valor de la estimacion
 def algoritmo_minimos_cuadrados(n, x, y, z):
     sumaX = 0
@@ -17,8 +19,12 @@ def algoritmo_minimos_cuadrados(n, x, y, z):
     valor_deflexion = 0.0
 
     fecha = datetime.datetime.now() # Obtiene la fecha actual
-    formato_fecha = fecha.strftime("%d-%m-%Y") # Da formato a la fecha
-    nombre_archivo = f"regresion_lineal_{formato_fecha}.txt" # Concatena el texto 'regresion lineal' con la fecha
+    formato_fecha = fecha.strftime("%d-%m-%Y %H-%M-%S") # Da formato a la fecha
+    file = "Resultados"
+    nombre_archivo = f"{file}/regresion_lineal_{formato_fecha}.txt" # Concatena el texto 'regresion lineal' con la fecha
+    
+    if not os.path.exists(file):
+        os.makedirs(file) # Crea la carpeta 'Resultados' si no existe
     
     # Crea un archivo con el nombre de regresion_lineal_DD-MM-AAAA
     with open(nombre_archivo, 'w') as archivo:
@@ -45,6 +51,7 @@ def algoritmo_minimos_cuadrados(n, x, y, z):
         archivo.write("\nLa ecuación de la recta es Y = {}({}) + {} = {}".format(b, z, a, valor_deflexion)) 
     archivo.close() # Cierra el archivo
     
+    
     #Grafica los puntos y la linea ajustada
     plt.scatter(x, y, label="Datos") # Dibuja los puntos dispersos
     plt.plot(x, [b*i + a for i in x], color='red', label='Ajuste de minimos cuadrados') # Dibuja la linea ajustada usando la ecuacion previamente encontrada
@@ -55,7 +62,7 @@ def algoritmo_minimos_cuadrados(n, x, y, z):
     plt.legend()
     plt.show()
     print("Los resultados de la regresión lineal simple han sido guardados")
-    return valor_deflexion
+    return valor_deflexion, nombre_archivo
 
 # Funcion que permite cargar un archivo CSV para una regresion lineal simple
 def insertar_csv_lineal(ruta,z):
@@ -74,13 +81,15 @@ def insertar_csv_lineal(ruta,z):
     archivo.close()
 
     #z = float(input("Ingrese el valor de x a estimar: "))
-    resultado = algoritmo_minimos_cuadrados(n, x, y, z) #Almacena el valor estimado en la variable resultado
-    print("El valor de deflexión aproximado es: ", resultado)
-
-# Funcion que permite cargar un archivo CSV para una regresion lineal multiple
-def insertar_csv_multiple():
+    resultado, nombre_archivo = algoritmo_minimos_cuadrados(n, x, y, z) #Almacena el valor estimado en la variable resultado
+    txt = f"El valor de deflexión aproximado es: {resultado}"
+    vista.messagebox.showinfo("Resultados",txt)
+    return nombre_archivo
     
-    ruta = input("Copie y pegue la ruta de su archivo: ") # Guardamos la ruta del archivo en la variable 'ruta'
+# Funcion que permite cargar un archivo CSV para una regresion lineal multiple
+def insertar_csv_multiple(ruta, x1, x2):
+    
+    #ruta = input("Copie y pegue la ruta de su archivo: ") # Guardamos la ruta del archivo en la variable 'ruta'
     # Carga los datos desde el archivo CSV
     datos = pd.read_csv(ruta)
     # Variables predictoras (x1 y x2) y variable de respuesta (y)
@@ -88,8 +97,8 @@ def insertar_csv_multiple():
     x = sm.add_constant(x)  # Añade columna de unos para el intercepto
     y = datos['Y']
     
-    x1 = float(input("Ingrese el valor de x1 a estimar: "))
-    x2 = float(input("Ingrese el valor de x2 a estimar: "))
+    #x1 = float(input("Ingrese el valor de x1 a estimar: "))
+    #x2 = float(input("Ingrese el valor de x2 a estimar: "))
    
     # Ajusta el modelo de regresión lineal múltiple
     modelo = sm.OLS(y, x).fit()
@@ -99,13 +108,15 @@ def insertar_csv_multiple():
     resumen = modelo.summary()
 
     fecha = datetime.datetime.now() # Obtiene la fecha actual
-    formato_fecha = fecha.strftime("%d-%m-%Y") # Da formato a la fecha
-    nombre_archivo = f"regresion_multiple_{formato_fecha}.txt" # Concatena el texto 'regresion multiple' con la fecha
+    formato_fecha = fecha.strftime("%d-%m-%Y %H-%M-%S") # Da formato a la fecha
+    file = "Resultados"
+    nombre_archivo = f"{file}/regresion_multiple_{formato_fecha}.txt" # Concatena el texto 'regresion multiple' con la fecha
     # Crea un archivo con el nombre de regresion_multiple_DD-MM-AAAA
     with open(nombre_archivo, 'w') as archivo:
         archivo.write("Resultados de la Regresión Lineal Multiple:\n\n")
         archivo.write(resumen.as_text()) # Convierte en texto el resumen del modelo ajustado y lo guarda en un archivo de texto
         archivo.write("\n\nLa ecuacion es: Y = {} + {} * {} + {} * {} = {}".format(modelo.params['const'], modelo.params['X1'], x1, modelo.params['X2'], x2, resultado)) # Guarda la ecuacion en el archivo
+
     archivo.close() # Cierra el archivo
     # Grafica los datos y la línea de regresión
     fig = plt.figure()
@@ -122,27 +133,29 @@ def insertar_csv_multiple():
     X_surf = pd.core.frame.DataFrame({'const': np.ones(10000), 'X1': x1_surf.ravel(), 'X2': x2_surf.ravel()}) # Crea un DataFrame de pandas con tres columnas: una columna llamada 'const' llena de unos, y dos columnas ('X1' y 'X2')
     ax.plot_surface(x1_surf, x2_surf, modelo.predict(X_surf).values.reshape(100, 100), color='None', alpha=0.5) # Traza una superficie tridimensional en un gráfico
     plt.show()
+    
+    return nombre_archivo
 
 def limpiar_pantalla():
     os.system('cls' if os.name == 'nt' else 'clear')
 
-def main():
-    print("\tMETODO DE MINIMOS CUADRADOS EN SERIES DE TIEMPO")
-    #Mientras este en el ciclo While, el programa seguira ejecutandose a menos que el usuario ingrese 0 como opcion.
-    while True:
-        opcion = int(input("1) REGRESION LINEAL SIMPLE \n2) REGRESION LINEAL MULTIPLE \n0) Salir del programa\nIngrese el numero de opcion: "))
-        if opcion == 0:
-            break
-        if opcion == 1:
-            insertar_csv_lineal()
-            limpiar_pantalla()
-        elif opcion == 2:
-            insertar_csv_multiple()
-            limpiar_pantalla()
-        else:
-            print("Opcion no valida. Debe ingresar el valor entero de 1, 2 o 0 si desea finalizar el programa")
-            limpiar_pantalla()
-    print("FIN")
+# def main():
+#     print("\tMETODO DE MINIMOS CUADRADOS EN SERIES DE TIEMPO")
+#     #Mientras este en el ciclo While, el programa seguira ejecutandose a menos que el usuario ingrese 0 como opcion.
+#     while True:
+#         opcion = int(input("1) REGRESION LINEAL SIMPLE \n2) REGRESION LINEAL MULTIPLE \n0) Salir del programa\nIngrese el numero de opcion: "))
+#         if opcion == 0:
+#             break
+#         if opcion == 1:
+#             insertar_csv_lineal()
+#             limpiar_pantalla()
+#         elif opcion == 2:
+#             insertar_csv_multiple()
+#             limpiar_pantalla()
+#         else:
+#             print("Opcion no valida. Debe ingresar el valor entero de 1, 2 o 0 si desea finalizar el programa")
+#             limpiar_pantalla()
+#     print("FIN")
 
-if __name__=="__main__":
-    main()
+# if __name__=="__main__":
+#     #main()
