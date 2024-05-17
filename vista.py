@@ -3,15 +3,17 @@ from tkinter import messagebox
 import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
 from tkinter.filedialog import askopenfile
+
 import MMC
 
 class CenteredWindow:
     def __init__(self, master):
         self.master = master
         self.style = ttk.Style(theme='darkly')  # Crea un estilo ttkbootstrap
-        self.master.title("Ventana centrada")
+        self.master.title("Proyecto Mínimos Cuadrados")
         self.master.geometry("750x500")  # Tamaño inicial de la ventana
         self.place_window_center()  # Centra la ventana en la pantalla
+        self.master.resizable(False,False)
         # Crea el menú
         self.create_menu()
         self.gif = None
@@ -61,14 +63,11 @@ class CenteredWindow:
         regresion_menu = ttk.Menu(data_menu, tearoff=0)
         data_menu.add_cascade(label="Carga Automática desde Conexión CSV", menu=regresion_menu)
         regresion_menu.add_command(label="Regresión Lineal Simple", command=self.ventana_regresion_simple)
-        regresion_menu.add_separator()
-        regresion_menu.add_command(label="Regresión Lineal Múltiple", command=self.multiple_linear_regression)
-        data_menu.add_separator()
-        data_menu.add_command(label="Carga Manual", command=self.manual_data_entry)
+        regresion_menu.add_command(label="Regresión Lineal Múltiple", command=self.ventana_regresion_multiple)
         
         option_menu = ttk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Opciones", menu=option_menu)
-        option_menu.add_cascade(label="Acerca De")
+        option_menu.add_cascade(label="Acerca De", command=self.ventana_acerca_de)
         option_menu.add_separator()
         option_menu.add_command(label="Salir", command=self.master.quit)
         
@@ -77,27 +76,80 @@ class CenteredWindow:
         self.master.config(menu=menubar)
 
     def ventana_regresion_simple(self):
-        v1 = ttk.Toplevel(self.master, position=(600,300), minsize=(500,250))
+        v1 = ttk.Toplevel(self.master, position=(600, 300))
         v1.title("Regresión Simple")
         v1.resizable(False, False)
-        v1.geometry("500x250")
-        
-        # Etiqueta y entrada para ingresar el valor a estimar
-        valor_estimar_label = ttk.Label(v1, text="Ingrese el valor a estimar:")
-        valor_estimar_label.pack(pady=5)
-        
+        v1.geometry("600x650")
+
+        # Field para ingresar valor
+        valor_estimar_label = ttk.Label(v1, text="Valor de x a estimar:")
+        valor_estimar_label.grid(row=0, column=0, padx=5, pady=5, sticky="e")
+
         self.valor_estimar_entry = ttk.Entry(v1)
-        self.valor_estimar_entry.pack(pady=5)
+        self.valor_estimar_entry.grid(row=0, column=1, padx=5, pady=5)
+
+        # Field para ingresar ruta
+        archivo_label = ttk.Label(v1, text="Ingrese la ruta del archivo:")
+        archivo_label.grid(row=1, column=0, padx=5, pady=5, sticky="e")
+
+        self.file_entry = ttk.Entry(v1, width=25)
+        self.file_entry.grid(row=1, column=1, padx=5, pady=5)
+
+        # Boton Seleccionar archivo
+        ttk.Button(v1, text="Seleccionar archivo", command=self.select_file).grid(row=1, column=2, padx=5, pady=5)
+
+        # Boton Calcular
+        ttk.Button(v1, text="Calcular", command=self.calcular_regresion).grid(row=2, column=1, padx=5, pady=5)
+
+        # Scroller Text Field para imprimir un texto
+        scroller_label = ttk.Label(v1, text="Detalle de calculos")
+        scroller_label.grid(row=3, column=0, padx=5, pady=5, sticky="e")
+
+        self.scrolled_text = ttk.ScrolledText(v1, wrap=ttk.WORD, width=80, height=30)
+        self.scrolled_text.grid(row=4, column=0, columnspan=3, padx=40, pady=5)
+
+        v1.grab_set()
         
-        # Etiqueta y entrada para cargar la ruta del archivo
-        archivo_label = ttk.Label(v1, text="Seleccione el archivo CSV:")
-        archivo_label.pack(pady=5)
+    def ventana_regresion_multiple(self):
+        v2 = ttk.Toplevel(self.master, position=(600,300))
+        v2.title("Regresión Multiple")
+        v2.resizable(False, False)
+        v2.geometry("900x700")
+
+        # Field para ingresar valor
+        valor_estimar_label1 = ttk.Label(v2, text="Valor de x1 a estimar:")
+        valor_estimar_label1.grid(row=0, column=0, padx=5, pady=5, sticky="e")
         
-        self.file_entry = ttk.Entry(v1, width=50)
-        self.file_entry.pack(pady=5)
+        valor_estimar_label2 = ttk.Label(v2, text="Valor de x2 a estimar:")
+        valor_estimar_label2.grid(row=1, column=0, padx=5, pady=5, sticky="e")
+
+        self.valor_estimar_x1 = ttk.Entry(v2)
+        self.valor_estimar_x1.grid(row=0, column=1, padx=5, pady=5)
         
-        ttk.Button(v1, text="Seleccionar archivo", command=self.select_file).pack(pady=5)
-        ttk.Button(v1, text="Calcular", command=self.calcular_regresion).pack(pady=5)
+        self.valor_estimar_x2 = ttk.Entry(v2)
+        self.valor_estimar_x2.grid(row=1, column=1, padx=5, pady=5)
+
+        # Field para ingresar ruta
+        archivo_label = ttk.Label(v2, text="Ingrese la ruta del archivo:")
+        archivo_label.grid(row=2, column=0, padx=5, pady=5, sticky="e")
+
+        self.file_entry = ttk.Entry(v2, width=25)
+        self.file_entry.grid(row=2, column=1, padx=5, pady=5)
+
+        # Boton Seleccionar archivo
+        ttk.Button(v2, text="Seleccionar archivo", command=self.select_file).grid(row=2, column=2, padx=5, pady=5)
+
+        # Boton Calcular
+        ttk.Button(v2, text="Calcular", command=self.calcular_multiple).grid(row=3, column=1, padx=5, pady=5)
+
+        # Scroller Text Field para imprimir un texto
+        scroller_label = ttk.Label(v2, text="Detalle de calculos")
+        scroller_label.grid(row=4, column=4, padx=5, pady=5, sticky="e")
+
+        self.scrolled_text = ttk.ScrolledText(v2, wrap=ttk.WORD, width=130, height=30)
+        self.scrolled_text.grid(row=4, column=0, columnspan=3, padx=40, pady=5)
+
+        v2.grab_set()
     
     def select_file(self):
         file_path = askopenfile(mode="r", filetypes=[("CSV files", "*.csv")])
@@ -105,7 +157,7 @@ class CenteredWindow:
             self.ruta = file_path.name
             self.file_entry.delete(0, "end")
             self.file_entry.insert(0, file_path.name)
-               
+                       
     def calcular_regresion(self):
         valor_estimar = self.valor_estimar_entry.get()
         try: 
@@ -116,23 +168,83 @@ class CenteredWindow:
         if not hasattr(self, 'ruta') or not self.ruta:
             messagebox.showerror("Error", "No se ha seleccionado un archivo")
         elif hasattr(self, 'ruta') or not self.ruta and self.valor_estimar_entry.get() != " ":
-            MMC.insertar_csv_lineal(self.ruta, valor_estimar)
+            nombre_archivo = MMC.insertar_csv_lineal(self.ruta, valor_estimar)
+            if nombre_archivo: 
+                self.cargar_resultados(nombre_archivo)
+                self.valor_estimar_entry.delete(0, ttk.END)
+                self.file_entry.delete(0,ttk.END)
+
+    
+    def calcular_multiple(self):
+        valor_estimar_x1 = self.valor_estimar_x1.get()
+        valor_estimar_x2 = self.valor_estimar_x2.get()
+        try:
+            valor_estimar_x1 = float(valor_estimar_x1)
+            valor_estimar_x2 = float(valor_estimar_x2)
+        except ValueError:
+            messagebox.showerror("Error", "Ingrese valores a estima")
         
+        if not hasattr(self, 'ruta') or not self.ruta:
+            messagebox.showerror("Error", "No se ha seleccionado un archivo")
+        elif hasattr(self, 'ruta') or not self.ruta and self.valor_estimar_x1.get() != " " and self.valor_estimar_x2.get() != " ":
+            nombre_archivo = MMC.insertar_csv_multiple(self.ruta, valor_estimar_x1, valor_estimar_x2)
+            if nombre_archivo: 
+                self.cargar_resultados(nombre_archivo)
+                self.valor_estimar_x1.delete(0, ttk.END)
+                self.valor_estimar_x2.delete(0, ttk.END)
+                self.file_entry.delete(0,ttk.END)
             
+        
+    def cargar_resultados(self, nombre_archivo):
+        try:
+            with open(nombre_archivo, 'r') as archivo:
+                contenido = archivo.read()
+                self.scrolled_text.delete(1.0, ttk.END)
+                self.scrolled_text.insert(ttk.INSERT, contenido)
+        except Exception as e:
+            messagebox.showerror("Error", f"No se pudo cargar el archivo: {e}")
+    
+    def ventana_acerca_de(self):
+        acerca_de = ttk.Toplevel(self.master, position=(750,300))
+        acerca_de.title("Acerca de")
+        acerca_de.geometry("400x450")
+        
+        info = (
+            "Desarrolladores:\n"
+            "Gerardo Ovando - 9490-21-7\n"
+            "Abner Pérez - 9490-17-11829\n"
+            "Edvin \n"
+            "Curso:\n"
+            "Estadística II - Proyecto Final \n\n"
+            "Información del Lenguaje:\n"
+            "Python 3.12.2\n"
+            "Bibliotecas utilizadas:\n"
+            "- tkinter\n"
+            "- csv\n"
+            "- os\n"
+            "- datetime\n"
+            "- matplotlib\n"
+            "- math\n"
+            "- ttkbootstrap\n"
+            "- statsmodels\n"
+            "- numpy\n"
+            "- pandas\n"
+        )
+        
+        label_info = ttk.Label(acerca_de, text=info, justify="left", style="info")
+        label_info.pack(padx=20, pady=20)
+        
+        btn_cerrar = ttk.Button(acerca_de, text="Cerrar", command=acerca_de.destroy)
+        btn_cerrar.pack(pady=10)
     
     def simple_linear_regression(self):
         self.ventana_regresion_simple()
-        print("Regresión Lineal Simple")
+        
 
     def multiple_linear_regression(self):
-        # Lógica para la regresión lineal múltiple
-        print("Regresión Lineal Múltiple")
+        self.ventana_regresion_multiple
 
-    def manual_data_entry(self):
-        # Aquí puedes implementar la lógica para abrir una segunda ventana para la inserción manual de datos
-        print("Abrir ventana para inserción manual de datos")
-
-
+    
 
 def main():
     
