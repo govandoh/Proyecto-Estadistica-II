@@ -111,6 +111,10 @@ def insertar_csv_multiple(ruta, x1, x2):
     formato_fecha = fecha.strftime("%d-%m-%Y %H-%M-%S") # Da formato a la fecha
     file = "Resultados"
     nombre_archivo = f"{file}/regresion_multiple_{formato_fecha}.txt" # Concatena el texto 'regresion multiple' con la fecha
+    
+    if not os.path.exists(file):
+        os.makedirs(file) # Crea la carpeta 'Resultados' si no existe
+    
     # Crea un archivo con el nombre de regresion_multiple_DD-MM-AAAA
     with open(nombre_archivo, 'w') as archivo:
         archivo.write("Resultados de la Regresión Lineal Multiple:\n\n")
