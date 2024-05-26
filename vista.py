@@ -18,6 +18,10 @@ class CenteredWindow:
         self.create_menu()
         self.gif = None
         self.create_cover()
+        
+        vcmd = (self.master.register(self.validate_numeric_input), '%P')
+
+
 
     def create_cover(self):
         # Fondo animado GIF
@@ -56,6 +60,12 @@ class CenteredWindow:
         # Crea un menú en la ventana
         menubar = ttk.Menu(self.master)
         
+        insert_menu = ttk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="Insertar en CSV's", menu=insert_menu)
+        insert_menu.add_cascade(label="Insertar CSV Simple", command="")
+        insert_menu.add_cascade(label="Insertar CSV Multiple", command="")
+        
+        
         # Crea el menú "Datos"
         data_menu = ttk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Regresión Mínimos Cuadrados", menu=data_menu)
@@ -81,11 +91,13 @@ class CenteredWindow:
         v1.resizable(False, False)
         v1.geometry("600x650")
 
+        vcmd = (self.master.register(self.validate_numeric_input), '%P')
+        
         # Field para ingresar valor
         valor_estimar_label = ttk.Label(v1, text="Valor de x a estimar:")
         valor_estimar_label.grid(row=0, column=0, padx=5, pady=5, sticky="e")
 
-        self.valor_estimar_entry = ttk.Entry(v1)
+        self.valor_estimar_entry = ttk.Entry(v1, validate='key', validatecommand=vcmd)
         self.valor_estimar_entry.grid(row=0, column=1, padx=5, pady=5)
 
         # Field para ingresar ruta
@@ -116,6 +128,8 @@ class CenteredWindow:
         v2.resizable(False, False)
         v2.geometry("900x700")
 
+        vcmd = (self.master.register(self.validate_numeric_input), '%P')
+        
         # Field para ingresar valor
         valor_estimar_label1 = ttk.Label(v2, text="Valor de x1 a estimar:")
         valor_estimar_label1.grid(row=0, column=0, padx=5, pady=5, sticky="e")
@@ -123,10 +137,10 @@ class CenteredWindow:
         valor_estimar_label2 = ttk.Label(v2, text="Valor de x2 a estimar:")
         valor_estimar_label2.grid(row=1, column=0, padx=5, pady=5, sticky="e")
 
-        self.valor_estimar_x1 = ttk.Entry(v2)
+        self.valor_estimar_x1 = ttk.Entry(v2, validate='key', validatecommand=vcmd)
         self.valor_estimar_x1.grid(row=0, column=1, padx=5, pady=5)
         
-        self.valor_estimar_x2 = ttk.Entry(v2)
+        self.valor_estimar_x2 = ttk.Entry(v2, validate='key', validatecommand=vcmd)
         self.valor_estimar_x2.grid(row=1, column=1, padx=5, pady=5)
 
         # Field para ingresar ruta
@@ -150,6 +164,16 @@ class CenteredWindow:
         self.scrolled_text.grid(row=4, column=0, columnspan=3, padx=40, pady=5)
 
         v2.grab_set()
+        
+    def validate_numeric_input(self, new_value):
+        """Función de validación para permitir solo números"""
+        if new_value == "":
+            return True
+        try:
+            float(new_value)
+            return True
+        except ValueError:
+            return False
     
     def select_file(self):
         file_path = askopenfile(mode="r", filetypes=[("CSV files", "*.csv")])
