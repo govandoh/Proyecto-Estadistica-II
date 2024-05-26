@@ -62,7 +62,7 @@ class CenteredWindow:
         
         insert_menu = ttk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Insertar en CSV's", menu=insert_menu)
-        insert_menu.add_cascade(label="Insertar CSV Simple", command="")
+        insert_menu.add_cascade(label="Insertar CSV Simple", command=self.ventana_insert_simple)
         insert_menu.add_cascade(label="Insertar CSV Multiple", command="")
         
         
@@ -84,7 +84,36 @@ class CenteredWindow:
         
         # Establece el menú en la ventana
         self.master.config(menu=menubar)
+        
+    def ventana_insert_simple(self):
+        vinsert = ttk.Toplevel(self.master, position=(600,300))
+        vinsert.title("Insertar en CSV")
+        vinsert.resizable(False,False)
+        vinsert.geometry("750x300")
+        
+        vcmd = (self.master.register(self.validate_numeric_input), '%P')
+        
+        valor_estimar_label = ttk.Label(vinsert, text="Ingrese valor X a insertar :")
+        valor_estimar_label.grid(row=1, column=0, padx=5, pady=5, sticky="e")
+        
+        self.valor_x = ttk.Entry(vinsert, validate='key', validatecommand=vcmd, width=30)
+        self.valor_x.grid(row=1, column=1, padx=5, pady=5, sticky="e")
+        
+        valor_estimar_labely = ttk.Label(vinsert, text="Ingrese valor Y a insertar :")
+        valor_estimar_labely.grid(row=1, column=2, padx=5, pady=5, sticky="e")
+        
+        self.valor_y = ttk.Entry(vinsert, validate='key', validatecommand=vcmd, width=30)
+        self.valor_y.grid(row=1, column=3, padx=5, pady=5, sticky="e")
 
+        
+        archivo_label = ttk.Label(vinsert, text="Seleccione ruta archivo:")
+        archivo_label.grid(row=0, column=0, padx=5, pady=5, sticky="e")
+        
+        self.file_entry = ttk.Entry(vinsert, validate='key', validatecommand=vcmd, width=30)
+        self.file_entry.grid(row=0, column=1, padx=0, pady=10, sticky="e")
+        
+        ttk.Button(vinsert, text="Seleccionar archivo", command=self.select_open_file).grid(row=0, column=2, padx=5, pady=5)
+        
     def ventana_regresion_simple(self):
         v1 = ttk.Toplevel(self.master, position=(600, 300))
         v1.title("Regresión Simple")
@@ -177,6 +206,13 @@ class CenteredWindow:
     
     def select_file(self):
         file_path = askopenfile(mode="r", filetypes=[("CSV files", "*.csv")])
+        if file_path:
+            self.ruta = file_path.name
+            self.file_entry.delete(0, "end")
+            self.file_entry.insert(0, file_path.name)
+            
+    def select_open_file(self):
+        file_path = askopenfile(mode="f", filetypes=[("CSV files", "*.csv")])
         if file_path:
             self.ruta = file_path.name
             self.file_entry.delete(0, "end")
