@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import statsmodels.api as sm
-
+import scipy.stats
 import vista
 
 #Algoritmo que calcula la b, a, r y forma la ecuacion de la recta. Retorna el valor de la estimacion
@@ -62,28 +62,48 @@ def algoritmo_minimos_cuadrados(n, x, y, z):
     plt.legend()
     plt.show()
     print("Los resultados de la regresión lineal simple han sido guardados")
+
     return valor_deflexion, nombre_archivo
 
 # Funcion que permite cargar un archivo CSV para una regresion lineal simple
 def insertar_csv_lineal(ruta,z):
-    n = 0
-    x = []
-    y = []
-    #ruta = input("Copie y pegue la ruta de su archivo: ") # Guardamos la ruta del archivo en la variable 'ruta'
-    
-    with open(ruta,"r") as archivo: # Abre el archivo CSV que se guardo en la ruta
-        lector = csv.reader(archivo) #Obtiene todas las filas del archivo
-        next(lector) # Se salta la cabecera del archivo CSV
-        for fila in lector: # Lee cada fila en el archivo
-            x.append(float(fila[0])) # Por cada fila, agrega el valor de la primer columna al arreglo x
-            y.append(float(fila[1])) # Por cada fila, agrega el valor de la segunda columna al arreglo y
-        n = lector.line_num - 1 # Obtiene el numero de filas sin contar la cabecera
-    archivo.close()
+    #Lee el archivo CSV y asigna los valores de X y Y en dos variables. Obtiene el numero n de filas del archivo
+    datos = pd.read_csv(ruta, header=0, usecols=['X', 'Y'])
+    x = datos['X']
+    y = datos['Y']
+    n = len(datos)
 
     #z = float(input("Ingrese el valor de x a estimar: "))
     resultado, nombre_archivo = algoritmo_minimos_cuadrados(n, x, y, z) #Almacena el valor estimado en la variable resultado
     txt = f"El valor de deflexión aproximado es: {resultado}"
     vista.messagebox.showinfo("Resultados",txt)
+    
+    #verificar si las correlaciones son estadísticamente significativas
+    alfa = 0.05
+
+    for i, col in enumerate(datos.columns[0:]):
+        res = scipy.stats.linregress(datos[col], datos["Y"])
+        print(f"{col}: \t Rechazo hipótesis nula: {res.pvalue < alfa}")
+
+    #las distribuciones bajo la hipótesis nula: linea azul
+    #los límites dados por alfa: linea punteada negra (dos colas)
+    #El valor del observado para cada una de las variables: linea roja
+    fig, ax = plt.subplots(1, 1, figsize=(8, 2), tight_layout=True, sharey=True)
+    ax.set_ylabel(datos.columns[1])
+
+    N = datos.shape[0]
+    t = np.linspace(-7, 7, num=1000)
+    dist = scipy.stats.t(loc=0, scale=1, df=N-2) # dos grados de libertad
+    
+    res = scipy.stats.linregress(datos['X'], datos["Y"])
+    t_data = res.rvalue*np.sqrt(N-2)/np.sqrt(1.-res.rvalue**2)
+    ax.plot(t, dist.pdf(t))
+    ax.plot([dist.ppf(alfa/2)]*2, [0, np.amax(dist.pdf(t))], 'k--')
+    ax.plot([dist.ppf(1-alfa/2)]*2, [0, np.amax(dist.pdf(t))], 'k--')
+    ax.plot([t_data]*2, [0, np.amax(dist.pdf(t))], 'r-')
+    ax.set_xlabel(datos.columns[0])
+
+    plt.show()
     return nombre_archivo
     
 # Funcion que permite cargar un archivo CSV para una regresion lineal multiple
@@ -91,7 +111,7 @@ def insertar_csv_multiple(ruta, x1, x2):
     
     #ruta = input("Copie y pegue la ruta de su archivo: ") # Guardamos la ruta del archivo en la variable 'ruta'
     # Carga los datos desde el archivo CSV
-    datos = pd.read_csv(ruta)
+    datos = pd.read_csv(ruta, header=0, usecols=['Y', 'X1', 'X2'])
     # Variables predictoras (x1 y x2) y variable de respuesta (y)
     x = datos[['X1', 'X2']]
     x = sm.add_constant(x)  # Añade columna de unos para el intercepto
@@ -110,11 +130,11 @@ def insertar_csv_multiple(ruta, x1, x2):
     fecha = datetime.datetime.now() # Obtiene la fecha actual
     formato_fecha = fecha.strftime("%d-%m-%Y %H-%M-%S") # Da formato a la fecha
     file = "Resultados"
-    nombre_archivo = f"{file}/regresion_multiple_{formato_fecha}.txt" # Concatena el texto 'regresion multiple' con la fecha
     
     if not os.path.exists(file):
         os.makedirs(file) # Crea la carpeta 'Resultados' si no existe
-    
+
+    nombre_archivo = f"{file}/regresion_multiple_{formato_fecha}.txt" # Concatena el texto 'regresion multiple' con la fecha
     # Crea un archivo con el nombre de regresion_multiple_DD-MM-AAAA
     with open(nombre_archivo, 'w') as archivo:
         archivo.write("Resultados de la Regresión Lineal Multiple:\n\n")
@@ -137,7 +157,35 @@ def insertar_csv_multiple(ruta, x1, x2):
     X_surf = pd.core.frame.DataFrame({'const': np.ones(10000), 'X1': x1_surf.ravel(), 'X2': x2_surf.ravel()}) # Crea un DataFrame de pandas con tres columnas: una columna llamada 'const' llena de unos, y dos columnas ('X1' y 'X2')
     ax.plot_surface(x1_surf, x2_surf, modelo.predict(X_surf).values.reshape(100, 100), color='None', alpha=0.5) # Traza una superficie tridimensional en un gráfico
     plt.show()
-    
+
+    #verificar si las correlaciones son estadísticamente significativas
+    alfa = 0.05
+
+    for i, col in enumerate(datos.columns[1:]):
+        res = scipy.stats.linregress(datos[col], datos["Y"])
+        print(f"{col}: \t Rechazo hipótesis nula: {res.pvalue < alfa}")
+
+    #las distribuciones bajo la hipótesis nula: linea azul
+    #los límites dados por alfa: linea punteada negra (dos colas)
+    #El valor del observado para cada una de las variables: linea roja
+    fig, ax = plt.subplots(1, 2, figsize=(8, 2), tight_layout=True, sharey=True)
+    ax[0].set_ylabel(datos.columns[0])
+
+    N = datos.shape[0]
+    t = np.linspace(-7, 7, num=1000)
+    dist = scipy.stats.t(loc=0, scale=1, df=N-2) # dos grados de libertad
+
+
+    for i, col in enumerate(datos.columns[1:]):
+        res = scipy.stats.linregress(datos[col], datos["Y"])
+        t_data = res.rvalue*np.sqrt(N-2)/np.sqrt(1.-res.rvalue**2)
+        ax[i].plot(t, dist.pdf(t))
+        ax[i].plot([dist.ppf(alfa/2)]*2, [0, np.amax(dist.pdf(t))], 'k--')
+        ax[i].plot([dist.ppf(1-alfa/2)]*2, [0, np.amax(dist.pdf(t))], 'k--')
+        ax[i].plot([t_data]*2, [0, np.amax(dist.pdf(t))], 'r-')
+        ax[i].set_xlabel(col)
+
+    plt.show()
     return nombre_archivo
 
 def limpiar_pantalla():
