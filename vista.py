@@ -279,7 +279,7 @@ class CenteredWindow:
         
         if file_path:
             # Crear un DataFrame con solo los encabezados
-            df = pd.DataFrame(columns=["Y", "X1", "X2"])
+            df = pd.DataFrame(columns=["X1", "X2", "Y"])
             
             # Guardar el DataFrame en un archivo CSV
             df.to_csv(file_path, index=False)
@@ -328,7 +328,7 @@ class CenteredWindow:
             # Crea un DataFrame con los nuevos datos
             df = pd.read_csv(self.ruta)
             # Agrega los nuevos datos al DataFrame existente
-            nuevosDatos = pd.DataFrame({'Y': [valor_y1], 'X1': [valor_x1], 'X2': [valor_x2]})
+            nuevosDatos = pd.DataFrame({'X1': [valor_x1], 'X2': [valor_x2], 'Y': [valor_y1]})
             df = pd.concat([df, nuevosDatos], ignore_index=True)
             # Guarda el DataFrame actualizado en el archivo CSV
             df.to_csv(self.ruta, index=False)
@@ -342,7 +342,7 @@ class CenteredWindow:
         try: 
             valor_estimar = float(valor_estimar)
         except ValueError:
-            messagebox.showerror("Error", "Ingrese valor a estima")
+            messagebox.showerror("Error", "Ingrese valor a estimar")
         
         if not hasattr(self, 'ruta') or not self.ruta:
             messagebox.showerror("Error", "No se ha seleccionado un archivo")
