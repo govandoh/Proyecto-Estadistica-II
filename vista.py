@@ -1,9 +1,8 @@
-
 from tkinter import messagebox
 import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
-from tkinter.filedialog import askopenfile
-
+from tkinter.filedialog import askopenfile, asksaveasfilename
+import pandas as pd
 import MMC
 
 class CenteredWindow:
@@ -20,8 +19,6 @@ class CenteredWindow:
         self.create_cover()
         
         vcmd = (self.master.register(self.validate_numeric_input), '%P')
-
-
 
     def create_cover(self):
         # Fondo animado GIF
@@ -63,7 +60,7 @@ class CenteredWindow:
         insert_menu = ttk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Insertar en CSV's", menu=insert_menu)
         insert_menu.add_cascade(label="Insertar CSV Simple", command=self.ventana_insert_simple)
-        insert_menu.add_cascade(label="Insertar CSV Multiple", command="")
+        insert_menu.add_cascade(label="Insertar CSV Multiple", command=self.ventana_insert_multiple)
         
         
         # Crea el menú "Datos"
@@ -84,7 +81,7 @@ class CenteredWindow:
         
         # Establece el menú en la ventana
         self.master.config(menu=menubar)
-        
+    #Ventana para insertar datos en un CSV simple    
     def ventana_insert_simple(self):
         vinsert = ttk.Toplevel(self.master, position=(600,300))
         vinsert.title("Insertar en CSV")
@@ -109,11 +106,55 @@ class CenteredWindow:
         archivo_label = ttk.Label(vinsert, text="Seleccione ruta archivo:")
         archivo_label.grid(row=0, column=0, padx=5, pady=5, sticky="e")
         
-        self.file_entry = ttk.Entry(vinsert, validate='key', validatecommand=vcmd, width=30)
+        self.file_entry = ttk.Entry(vinsert, validate='key', width=30)
         self.file_entry.grid(row=0, column=1, padx=0, pady=10, sticky="e")
         
-        ttk.Button(vinsert, text="Seleccionar archivo", command=self.select_open_file).grid(row=0, column=2, padx=5, pady=5)
+        ttk.Button(vinsert, text="Seleccionar archivo", command=self.select_file).grid(row=0, column=2, padx=5, pady=5)
+        # Boton para crear archivo nuevo
+        ttk.Button(vinsert, text="Crear archivo nuevo", command=self.crear_archivo_csv).grid(row=0, column=3, padx=5, pady=5)
+        # Boton Guardar
+        ttk.Button(vinsert, text="Insertar Datos", command=self.guardar_csv_simple).grid(row=2, column=2, padx=5, pady=5)
+        vinsert.grab_set()
+    #Ventana para insertar datos en un CSV multiple
+    def ventana_insert_multiple(self):
+        vinsert = ttk.Toplevel(self.master, position=(600,300))
+        vinsert.title("Insertar en CSV")
+        vinsert.resizable(False,False)
+        vinsert.geometry("750x300")
         
+        vcmd = (self.master.register(self.validate_numeric_input), '%P')
+        # Etiqueta de X1
+        valor_x1_label = ttk.Label(vinsert, text="Ingrese valor X1 a insertar :")
+        valor_x1_label.grid(row=1, column=0, padx=5, pady=5, sticky="e")
+        # Textbox X1
+        self.valor_x1 = ttk.Entry(vinsert, validate='key', validatecommand=vcmd, width=30)
+        self.valor_x1.grid(row=1, column=1, padx=5, pady=5, sticky="e")
+        # Etiqueta de X2
+        valor_x2_label = ttk.Label(vinsert, text="Ingrese valor X2 a insertar :")
+        valor_x2_label.grid(row=1, column=2, padx=5, pady=5, sticky="e")
+        # Textbox X2
+        self.valor_x2 = ttk.Entry(vinsert, validate='key', validatecommand=vcmd, width=30)
+        self.valor_x2.grid(row=1, column=3, padx=5, pady=5, sticky="e")
+        # Etiqueta de Y
+        valor_y_label = ttk.Label(vinsert, text="Ingrese valor Y a insertar :")
+        valor_y_label.grid(row=2, column=0, padx=5, pady=5, sticky="e")
+        # Textbox Y
+        self.valor_y1 = ttk.Entry(vinsert, validate='key', validatecommand=vcmd, width=30)
+        self.valor_y1.grid(row=2, column=1, padx=5, pady=5, sticky="e")
+        #Seleccionar archivo
+        archivo_label = ttk.Label(vinsert, text="Seleccione ruta archivo:")
+        archivo_label.grid(row=0, column=0, padx=5, pady=5, sticky="e")
+        # Textbox Archivo
+        self.file_entry = ttk.Entry(vinsert, validate='key', width=30)
+        self.file_entry.grid(row=0, column=1, padx=0, pady=10, sticky="e")
+        
+        ttk.Button(vinsert, text="Seleccionar archivo", command=self.select_file).grid(row=0, column=2, padx=5, pady=5)
+        # Boton para crear archivo nuevo
+        ttk.Button(vinsert, text="Crear archivo nuevo", command=self.crear_archivo_csv_multiple).grid(row=0, column=3, padx=5, pady=5)
+        # Boton Guardar
+        ttk.Button(vinsert, text="Insertar Datos", command=self.guardar_csv_multiple).grid(row=2, column=2, padx=5, pady=5)
+        vinsert.grab_set()
+
     def ventana_regresion_simple(self):
         v1 = ttk.Toplevel(self.master, position=(600, 300))
         v1.title("Regresión Simple")
@@ -210,14 +251,92 @@ class CenteredWindow:
             self.ruta = file_path.name
             self.file_entry.delete(0, "end")
             self.file_entry.insert(0, file_path.name)
-            
-    def select_open_file(self):
-        file_path = askopenfile(mode="f", filetypes=[("CSV files", "*.csv")])
+    #Crea un archivo CSV lineal simple       
+    def crear_archivo_csv(self):
+        # Abre el cuadro de diálogo para guardar el archivo
+        file_path = asksaveasfilename(
+            defaultextension=".csv",
+            filetypes=[("CSV files", "*.csv"), ("All files", "*.*")]
+        )
+        
         if file_path:
-            self.ruta = file_path.name
-            self.file_entry.delete(0, "end")
-            self.file_entry.insert(0, file_path.name)
-                       
+            # Crear un DataFrame con solo los encabezados
+            df = pd.DataFrame(columns=["X", "Y"])
+            
+            # Guardar el DataFrame en un archivo CSV
+            df.to_csv(file_path, index=False)
+        
+        self.ruta = file_path
+        self.file_entry.delete(0, "end")
+        self.file_entry.insert(0, file_path)
+    #Crea un archivo CSV multiple
+    def crear_archivo_csv_multiple(self):
+        # Abre el cuadro de diálogo para guardar el archivo
+        file_path = asksaveasfilename(
+            defaultextension=".csv",
+            filetypes=[("CSV files", "*.csv"), ("All files", "*.*")]
+        )
+        
+        if file_path:
+            # Crear un DataFrame con solo los encabezados
+            df = pd.DataFrame(columns=["Y", "X1", "X2"])
+            
+            # Guardar el DataFrame en un archivo CSV
+            df.to_csv(file_path, index=False)
+        
+        self.ruta = file_path
+        self.file_entry.delete(0, "end")
+        self.file_entry.insert(0, file_path)
+    # Guarda los datos en el archivo CSV para regresion lineal simple
+    def guardar_csv_simple(self):
+        valor_x = self.valor_x.get()
+        valor_y = self.valor_y.get()
+        try:
+            valor_x = float(valor_x)
+            valor_y = float(valor_y)
+        except ValueError:
+            messagebox.showerror("Error", "Ingrese valores numericos a insertar")
+        
+        if not hasattr(self, 'ruta') or not self.ruta:
+            messagebox.showerror("Error", "No se ha seleccionado un archivo")
+        elif hasattr(self, 'ruta') or not self.ruta and self.valor_x.get() != " " and self.valor_y.get() != " ":
+            # Crea un DataFrame con los nuevos datos
+            df = pd.read_csv(self.ruta)
+            # Agrega los nuevos datos al DataFrame existente
+            nuevosDatos = pd.DataFrame({'X': [valor_x], 'Y': [valor_y]})
+            df = pd.concat([df, nuevosDatos], ignore_index=True)
+            # Guarda el DataFrame actualizado en el archivo CSV
+            df.to_csv(self.ruta, index=False)
+            print(f"Datos agregados y guardados en: {self.ruta}")
+            self.valor_x.delete(0, ttk.END)
+            self.valor_y.delete(0, ttk.END)
+    # Guarda los datos en el archivo CSV para regresion lineal multiple
+    def guardar_csv_multiple(self):
+        valor_x1 = self.valor_x1.get()
+        valor_x2 = self.valor_x2.get()
+        valor_y1 = self.valor_y1.get()
+        try:
+            valor_x1 = float(valor_x1)
+            valor_x2 = float(valor_x2)
+            valor_y1 = float(valor_y1)
+        except ValueError:
+            messagebox.showerror("Error", "Ingrese valores numericos a insertar")
+        
+        if not hasattr(self, 'ruta') or not self.ruta:
+            messagebox.showerror("Error", "No se ha seleccionado un archivo")
+        elif hasattr(self, 'ruta') or not self.ruta and self.valor_x.get() != " " and self.valor_y.get() != " ":
+            # Crea un DataFrame con los nuevos datos
+            df = pd.read_csv(self.ruta)
+            # Agrega los nuevos datos al DataFrame existente
+            nuevosDatos = pd.DataFrame({'Y': [valor_y1], 'X1': [valor_x1], 'X2': [valor_x2]})
+            df = pd.concat([df, nuevosDatos], ignore_index=True)
+            # Guarda el DataFrame actualizado en el archivo CSV
+            df.to_csv(self.ruta, index=False)
+            print(f"Datos agregados y guardados en: {self.ruta}")
+            self.valor_x1.delete(0, ttk.END)
+            self.valor_x2.delete(0, ttk.END)
+            self.valor_y1.delete(0, ttk.END)      
+    
     def calcular_regresion(self):
         valor_estimar = self.valor_estimar_entry.get()
         try: 
