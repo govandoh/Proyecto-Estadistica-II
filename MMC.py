@@ -81,9 +81,10 @@ def insertar_csv_lineal(ruta,z):
     #verificar si las correlaciones son estadísticamente significativas
     alfa = 0.05
 
-    for i, col in enumerate(datos.columns[0:]):
-        res = scipy.stats.linregress(datos[col], datos["Y"])
-        print(f"{col}: \t Rechazo hipótesis nula: {res.pvalue < alfa}")
+    #for i, col in enumerate(datos.columns[0:]):
+    res = scipy.stats.linregress(datos['X'], datos["Y"])
+    print(f"{datos.columns[0]}: \t Rechazo hipótesis nula: {res.pvalue < alfa}")
+    vista.messagebox.showinfo("Info", f"{datos.columns[0]}: \t Rechazo hipótesis nula: {res.pvalue < alfa}")
 
     #las distribuciones bajo la hipótesis nula: linea azul
     #los límites dados por alfa: linea punteada negra (dos colas)
@@ -111,7 +112,7 @@ def insertar_csv_multiple(ruta, x1, x2):
     
     #ruta = input("Copie y pegue la ruta de su archivo: ") # Guardamos la ruta del archivo en la variable 'ruta'
     # Carga los datos desde el archivo CSV
-    datos = pd.read_csv(ruta, header=0, usecols=['Y', 'X1', 'X2'])
+    datos = pd.read_csv(ruta, header=0, usecols=['X1', 'X2', 'Y'])
     # Variables predictoras (x1 y x2) y variable de respuesta (y)
     x = datos[['X1', 'X2']]
     x = sm.add_constant(x)  # Añade columna de unos para el intercepto
@@ -161,22 +162,23 @@ def insertar_csv_multiple(ruta, x1, x2):
     #verificar si las correlaciones son estadísticamente significativas
     alfa = 0.05
 
-    for i, col in enumerate(datos.columns[1:]):
+    for i, col in enumerate(datos.columns[0:2]):
         res = scipy.stats.linregress(datos[col], datos["Y"])
         print(f"{col}: \t Rechazo hipótesis nula: {res.pvalue < alfa}")
+        vista.messagebox.showinfo("Info", f"{col}: \t Rechazo hipótesis nula: {res.pvalue < alfa}")
 
     #las distribuciones bajo la hipótesis nula: linea azul
     #los límites dados por alfa: linea punteada negra (dos colas)
     #El valor del observado para cada una de las variables: linea roja
     fig, ax = plt.subplots(1, 2, figsize=(8, 2), tight_layout=True, sharey=True)
-    ax[0].set_ylabel(datos.columns[0])
+    ax[0].set_ylabel(datos.columns[2])
 
     N = datos.shape[0]
     t = np.linspace(-7, 7, num=1000)
     dist = scipy.stats.t(loc=0, scale=1, df=N-2) # dos grados de libertad
 
 
-    for i, col in enumerate(datos.columns[1:]):
+    for i, col in enumerate(datos.columns[0:2]):
         res = scipy.stats.linregress(datos[col], datos["Y"])
         t_data = res.rvalue*np.sqrt(N-2)/np.sqrt(1.-res.rvalue**2)
         ax[i].plot(t, dist.pdf(t))
