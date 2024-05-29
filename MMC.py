@@ -159,6 +159,19 @@ def insertar_csv_multiple(ruta, x1, x2):
     ax.plot_surface(x1_surf, x2_surf, modelo.predict(X_surf).values.reshape(100, 100), color='None', alpha=0.5) # Traza una superficie tridimensional en un gráfico
     plt.show()
 
+    #  Ajustamos regresiones lineales entre Y y X1 y X2:
+    fig, ax = plt.subplots(1, 2, figsize=(8, 3), tight_layout=True, sharey=True)
+    ax[0].set_ylabel(datos.columns[2])
+    for ax_, col in zip(ax, datos.columns[0:2]):
+        res = scipy.stats.linregress(datos[col], datos["Y"])
+        x_plot = np.linspace(np.amin(datos[col]), np. amax(datos[col]), num=100)
+        ax_.scatter(datos[col], datos["Y"], label='datos', s=10)    
+        ax_.plot(x_plot, res.slope*x_plot + res.intercept, lw=2, c='r', label='modelo')
+        ax_.set_xlabel(col)
+        ax_.set_title(f"$r$: {res.rvalue:0.5f}")
+    ax_.legend()
+    fig.show()
+
     #verificar si las correlaciones son estadísticamente significativas
     alfa = 0.05
 
